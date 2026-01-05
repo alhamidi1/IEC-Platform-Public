@@ -10,7 +10,8 @@ services:
       MYSQL_PASSWORD: secret123
     volumes:
       - db_data:/var/lib/mysql
-      - ../Apache/www/assets/db/iec_platform.sql:/docker-entrypoint-initdb.d/init.sql
+      - ../Apache/www/assets/db/schema.sql:/docker-entrypoint-initdb.d/00-schema.sql
+      - ./init-user-permissions.sql:/docker-entrypoint-initdb.d/02-permissions.sql
     networks:
       - csn_net
 

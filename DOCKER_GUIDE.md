@@ -22,6 +22,7 @@ ansible-playbook ansible/start-services.yml
 ```
 
 This script will:
+
 - ✓ Check Docker is running
 - ✓ Create the shared network (`csn_net`)
 - ✓ Start database server (MariaDB + phpMyAdmin)
@@ -34,6 +35,7 @@ This script will:
 For `http://iec.test:8080` to work, configure your system DNS:
 
 **macOS:**
+
 1. System Settings → Network → Select your connection → Details
 2. Click **DNS** tab → Click **+** button
 3. Add: `127.0.0.1`
@@ -41,6 +43,7 @@ For `http://iec.test:8080` to work, configure your system DNS:
 5. Click OK → Apply
 
 **Windows:**
+
 1. Control Panel → Network and Internet → Network Connections
 2. Right-click your adapter → Properties
 3. Select "Internet Protocol Version 4 (TCP/IPv4)" → Properties
@@ -52,6 +55,7 @@ For `http://iec.test:8080` to work, configure your system DNS:
 ### 3. Access the Platform
 
 Open your browser:
+
 - **Web Application**: http://iec.test:8080 (with DNS) or http://localhost:8080
 - **phpMyAdmin**: http://localhost:8082
 - **Nagios**: http://localhost:8081
@@ -61,6 +65,18 @@ Open your browser:
 ```bash
 ansible-playbook ansible/stop-services.yml
 ```
+
+This stops all containers while **preserving your database data**.
+
+### 5. Reset Database (When SQL Schema Changed)
+
+If you've updated the SQL schema file, use this to wipe and recreate the database:
+
+```bash
+ansible-playbook ansible/reset-db.yml
+```
+
+⚠️ **Warning:** This will delete all database volumes and data!
 
 ---
 
@@ -85,6 +101,7 @@ cd ..
 ```
 
 **Access phpMyAdmin:**
+
 - URL: http://localhost:8082
 - Username: `root`
 - Password: `rootpass123`
@@ -98,6 +115,7 @@ cd ..
 ```
 
 **Access Web Application:**
+
 - URL: http://localhost:8080
 
 ### Step 4: Start DNS Server
@@ -119,6 +137,7 @@ cd ..
 ```
 
 **Access Nagios:**
+
 - URL: http://localhost:8081
 - Username: `nagiosadmin`
 - Password: `nagios`
@@ -142,22 +161,27 @@ The BIND DNS server allows you to access your website using a custom domain (`ie
 #### macOS Configuration
 
 1. **Open System Settings**
-   - Click  → System Settings → Network
+
+   - Click → System Settings → Network
 
 2. **Select Your Network**
+
    - Click your active connection (Wi-Fi or Ethernet with green dot)
    - Click **Details...** button
 
 3. **Add DNS Server**
+
    - Click **DNS** tab
    - Click **+** button below DNS servers list
    - Type: `127.0.0.1`
    - **Important**: Drag `127.0.0.1` to the **top** of the list
 
 4. **Apply Changes**
+
    - Click **OK** → Apply
 
 5. **Flush DNS Cache**
+
    ```bash
    dscacheutil -flushcache
    ```
@@ -171,14 +195,17 @@ The BIND DNS server allows you to access your website using a custom domain (`ie
 #### Windows Configuration
 
 1. **Open Network Connections**
+
    - Control Panel → Network and Internet → Network Connections
 
 2. **Configure Adapter**
+
    - Right-click your network adapter → Properties
    - Select "Internet Protocol Version 4 (TCP/IPv4)"
    - Click Properties
 
 3. **Set DNS Servers**
+
    - Select "Use the following DNS server addresses"
    - Preferred DNS server: `127.0.0.1`
    - Alternate DNS server: `8.8.8.8` (Google DNS fallback)
@@ -215,6 +242,7 @@ docker ps
 ```
 
 You should see:
+
 - `webserver` - Apache web server
 - `dbserver` - MariaDB database
 - `phpmyadmin` - Database management
@@ -241,24 +269,29 @@ docker logs dbserver
 ### Issue 1: DNS Not Resolving in Browser
 
 **Symptoms:**
+
 - `nslookup iec.test 127.0.0.1` works
 - Browser shows "Site can't be reached" for `http://iec.test:8080`
 
 **Solution:**
+
 1. Verify `127.0.0.1` is at the **top** of DNS servers list
 2. Flush DNS cache:
+
    ```bash
    # macOS
    dscacheutil -flushcache
-   
+
    # Windows
    ipconfig /flushdns
    ```
+
 3. Restart your browser
 4. Try incognito/private browsing mode
 
 **Alternative:**
 Use `/etc/hosts` (macOS/Linux) or `C:\Windows\System32\drivers\etc\hosts` (Windows):
+
 ```
 127.0.0.1    iec.test www.iec.test
 ```
@@ -266,17 +299,20 @@ Use `/etc/hosts` (macOS/Linux) or `C:\Windows\System32\drivers\etc\hosts` (Windo
 ### Issue 2: DNS Container Not Running
 
 **Check Status:**
+
 ```bash
 docker ps -a | grep dns-server
 ```
 
 **Restart DNS Server:**
+
 ```bash
 cd bind
 docker-compose -f docker-compose.bind.yml restart
 ```
 
 **View Logs:**
+
 ```bash
 docker logs dns-server
 ```
@@ -288,6 +324,7 @@ docker logs dns-server
 **Solution:**
 
 **macOS:** Port 53 might be used by mDNSResponder
+
 ```bash
 # Check what's using port 53
 sudo lsof -i :53
@@ -300,15 +337,19 @@ sudo lsof -i :53
 ### Issue 4: Database Connection Failed
 
 **Symptoms:**
+
 - Web application can't connect to database
 
 **Solution:**
+
 1. Ensure database is running:
+
    ```bash
    docker ps | grep dbserver
    ```
 
 2. Check database logs:
+
    ```bash
    docker logs dbserver
    ```
@@ -316,7 +357,7 @@ sudo lsof -i :53
 3. Verify environment variables in `Apache/docker-compose.web.yml`:
    ```yaml
    DB_HOST: dbserver
-   DB_NAME: iec_platform  
+   DB_NAME: iec_platform
    DB_USER: appuser
    DB_PASSWORD: secret123
    ```
@@ -328,17 +369,20 @@ sudo lsof -i :53
 To add subdomains like `api.iec.test` or `admin.iec.test`:
 
 1. **Edit DNS Zone File**
+
    ```bash
    nano bind/db.iec.test
    ```
 
 2. **Add A Records**
+
    ```dns
    api     IN      A       127.0.0.1
    admin   IN      A       127.0.0.1
    ```
 
 3. **Restart DNS Server**
+
    ```bash
    cd bind
    docker-compose -f docker-compose.bind.yml restart
@@ -353,13 +397,13 @@ To add subdomains like `api.iec.test` or `admin.iec.test`:
 
 ## Port Summary
 
-| Service | Port | URL | Credentials |
-|---------|------|-----|-------------|
-| **Web App** | 8080 | http://iec.test:8080 or http://localhost:8080 | Sign in via web |
-| **phpMyAdmin** | 8082 | http://localhost:8082 | root / rootpass123 |
-| **Nagios** | 8081 | http://localhost:8081 | nagiosadmin / nagios |
-| **DNS Server** | 53 | N/A (internal) | N/A |
-| **Database** | 3306 | Internal only | appuser / secret123 |
+| Service        | Port | URL                                           | Credentials          |
+| -------------- | ---- | --------------------------------------------- | -------------------- |
+| **Web App**    | 8080 | http://iec.test:8080 or http://localhost:8080 | Sign in via web      |
+| **phpMyAdmin** | 8082 | http://localhost:8082                         | root / rootpass123   |
+| **Nagios**     | 8081 | http://localhost:8081                         | nagiosadmin / nagios |
+| **DNS Server** | 53   | N/A (internal)                                | N/A                  |
+| **Database**   | 3306 | Internal only                                 | appuser / secret123  |
 
 ---
 
@@ -386,12 +430,14 @@ Browser connects to 127.0.0.1:8080 (Web Server)
 ### Why DNS Server vs /etc/hosts?
 
 **DNS Server (Recommended):**
+
 - ✅ Proper DNS resolution
 - ✅ Can add subdomains dynamically
 - ✅ Professional setup
 - ✅ Learning DNS server configuration
 
 **/etc/hosts (Simple Alternative):**
+
 - ✅ Simple one-line configuration
 - ✅ No DNS configuration needed
 - ❌ Static only (can't add subdomains without editing)
@@ -401,13 +447,13 @@ Browser connects to 127.0.0.1:8080 (Web Server)
 
 ## Windows vs macOS Differences
 
-| Feature | macOS | Windows |
-|---------|-------|---------|
-| **DNS Configuration** | System Settings → Network → DNS | Control Panel → Network Adapter |
-| **`.local` TLD** | ❌ Conflicts with mDNS | ✅ Works fine |
-| **`.test` TLD** | ✅ Works | ✅ Works |
-| **Flush DNS** | `dscacheutil -flushcache` | `ipconfig /flushdns` |
-| **Hosts File** | `/etc/hosts` | `C:\Windows\System32\drivers\etc\hosts` |
+| Feature               | macOS                           | Windows                                 |
+| --------------------- | ------------------------------- | --------------------------------------- |
+| **DNS Configuration** | System Settings → Network → DNS | Control Panel → Network Adapter         |
+| **`.local` TLD**      | ❌ Conflicts with mDNS          | ✅ Works fine                           |
+| **`.test` TLD**       | ✅ Works                        | ✅ Works                                |
+| **Flush DNS**         | `dscacheutil -flushcache`       | `ipconfig /flushdns`                    |
+| **Hosts File**        | `/etc/hosts`                    | `C:\Windows\System32\drivers\etc\hosts` |
 
 **Recommendation:** Use `.test` TLD for cross-platform compatibility.
 
@@ -415,32 +461,52 @@ Browser connects to 127.0.0.1:8080 (Web Server)
 
 ## Resetting Everything
 
-If you need to start fresh:
+### Option 1: Stop Services (Preserve Data)
 
-### Stop All Containers
+Stops all containers but keeps your database data:
+
 ```bash
 ansible-playbook ansible/stop-services.yml
 ```
 
-### Remove All Containers
+### Option 2: Reset Database (Delete All Data)
+
+Stops all containers and **wipes the database volume**:
+
 ```bash
+ansible-playbook ansible/reset-db.yml
+```
+
+⚠️ **Warning:** This will permanently delete all data!
+
+Use this when:
+
+- You've updated the SQL schema file (`Apache/www/assets/db/iec_platform.sql`)
+- You need to start with a fresh database
+- You're experiencing database corruption
+
+### Manual Cleanup (Advanced)
+
+If you need to manually remove everything:
+
+```bash
+# Stop and remove all containers
 docker-compose -f Apache/docker-compose.web.yml down
 docker-compose -f mariadb/docker-compose.db.yml down
 docker-compose -f bind/docker-compose.bind.yml down
 docker-compose -f nagios/docker-compose.yml down
-```
 
-### Remove Database Volume (Data Loss!)
-```bash
+# Remove database volume
 docker volume rm mariadb_db_data
-```
 
-### Remove Network
-```bash
+# Remove network
 docker network rm csn_net
 ```
 
 ### Start Fresh
+
+After resetting, restart services:
+
 ```bash
 ansible-playbook ansible/start-services.yml
 ```
@@ -452,6 +518,7 @@ ansible-playbook ansible/start-services.yml
 **This setup is for LOCAL DEVELOPMENT only.**
 
 For production deployment:
+
 1. ❌ **Don't use** `/etc/hosts` or local DNS server
 2. ✅ **Buy a real domain** (e.g., from Namecheap, GoDaddy)
 3. ✅ **Point DNS A Record** to your server's public IP
@@ -502,6 +569,7 @@ docker exec -it <container_name> /bin/bash
 ## Getting Help
 
 If you encounter issues:
+
 1. Check container logs: `docker logs <container_name>`
 2. Verify all containers are running: `docker ps`
 3. Check network connectivity: `docker network inspect csn_net`

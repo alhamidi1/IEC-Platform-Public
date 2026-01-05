@@ -1,4 +1,3 @@
-
 # IEC Platform - Ops Guide
 
 ## 🚀 Quick Commands
@@ -9,20 +8,29 @@
 ansible-playbook ansible/start-services.yml
 ```
 
-### Stop Everything
+### Stop Everything (Preserve Data)
+
 ```bash
 ansible-playbook ansible/stop-services.yml
 ```
+
+### Reset Database (Delete All Data)
+
+```bash
+ansible-playbook ansible/reset-db.yml
+```
+
+⚠️ Use this when you've updated the SQL schema file.
 
 ---
 
 ## 🌐 Services Dashboard
 
-| Service | URL | Credentials | Description |
-|---------|-----|-------------|-------------|
-| **Web App** | [http://iec.test:8080](http://iec.test:8080)      | (user: password)       | The main e-learning platform. |
-| **phpMyAdmin** | [http://localhost:8082](http://localhost:8082) | (root: rootpass123)    | Database management interface. |
-| **Nagios** | [http://localhost:8081](http://localhost:8081)     | (nagiosadmin: nagios)  | System monitoring dashboard. |
+| Service        | URL                                            | Credentials           | Description                    |
+| -------------- | ---------------------------------------------- | --------------------- | ------------------------------ |
+| **Web App**    | [http://iec.test:8080](http://iec.test:8080)   | (user: password)      | The main e-learning platform.  |
+| **phpMyAdmin** | [http://localhost:8082](http://localhost:8082) | (root: rootpass123)   | Database management interface. |
+| **Nagios**     | [http://localhost:8081](http://localhost:8081) | (nagiosadmin: nagios) | System monitoring dashboard.   |
 
 > **Note:** If `http://iec.test:8080` doesn't load, use [http://localhost:8080](http://localhost:8080).
 

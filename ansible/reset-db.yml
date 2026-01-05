@@ -1,5 +1,5 @@
 ---
-- name: Stop all Docker Containers
+- name: Stop all Docker Containers and Reset Database
   hosts: localhost
   connection: local
   gather_facts: false
@@ -7,6 +7,14 @@
     project_root: "{{ playbook_dir }}/.."
 
   tasks:
+    - name: Warning
+      ansible.builtin.debug:
+        msg: "⚠️  WARNING: This will DELETE all database volumes and data!"
+
+    - name: Confirm reset
+      ansible.builtin.pause:
+        prompt: "Are you sure you want to reset the database? Press ENTER to continue or Ctrl+C to cancel"
+
     # Stop Web Server
     - name: Stop Web Server
       community.docker.docker_compose_v2:
@@ -31,15 +39,15 @@
           - docker-compose.yml
         state: absent
 
-    # Stop Database (without removing volumes)
-    - name: Stop Database
+    # Stop Database and REMOVE volumes
+    - name: Stop Database and Remove Volumes
       community.docker.docker_compose_v2:
         project_src: "{{ project_root }}/mariadb"
         files:
           - docker-compose.db.yml
         state: absent
-        remove_volumes: false
+        remove_volumes: true
 
     - name: Final Status
       ansible.builtin.debug:
-        msg: "🛑 All containers stopped. Database volumes preserved."
+        msg: "🛑 All containers stopped. Database volumes DELETED."
