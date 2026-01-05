@@ -1,0 +1,3 @@
+# Custom configuration files for container monitoring
+cfg_file=/opt/nagios/etc/objects/hosts.cfg
+cfg_file=/opt/nagios/etc/objects/services.cfg

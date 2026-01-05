@@ -5,6 +5,16 @@ services:
     ports:
       - "8081:80"
       - "5666:5666"
+    volumes:
+      - ./etc/nagios4/conf.d/localhost.cfg:/opt/nagios/etc/objects/localhost.cfg
+      - ./etc/nagios4/conf.d/hosts.cfg:/opt/nagios/etc/objects/hosts.cfg
+      - ./etc/nagios4/conf.d/services.cfg:/opt/nagios/etc/objects/services.cfg
+      - ./etc/nagios4/conf.d/contacts.cfg:/opt/nagios/etc/objects/contacts.cfg
+      - ./etc/nagios4/conf.d/commands.cfg:/opt/nagios/etc/objects/custom-commands.cfg
+      - ./start-nagios-custom.sh:/usr/local/bin/start-nagios-custom.sh
+    command: ["/bin/bash", "/usr/local/bin/start-nagios-custom.sh"]
+    environment:
+      - NAGIOS_TIMEZONE=UTC
     networks:
       - csn_net
 
